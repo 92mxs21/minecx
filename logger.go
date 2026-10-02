@@ -36,9 +36,7 @@ func (l *Logger) Close() {
 	}
 }
 
-func (l *Logger) write(s string) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
+func (l *Logger) writeLocked(s string) {
 	fmt.Print(s)
 	if l.file != nil {
 		_, _ = l.file.WriteString(s)
@@ -56,7 +54,7 @@ func (l *Logger) Printf(format string, a ...any) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.clearProgressLocked()
-	l.write(fmt.Sprintf("%s  %s\n", time.Now().Format("15:04:05"), fmt.Sprintf(format, a...)))
+	l.writeLocked(fmt.Sprintf("%s  %s\n", time.Now().Format("15:04:05"), fmt.Sprintf(format, a...)))
 }
 
 func (l *Logger) Verbosef(format string, a ...any) {
@@ -66,7 +64,7 @@ func (l *Logger) Verbosef(format string, a ...any) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.clearProgressLocked()
-	l.write(fmt.Sprintf("%s  debug: %s\n", time.Now().Format("15:04:05"), fmt.Sprintf(format, a...)))
+	l.writeLocked(fmt.Sprintf("%s  debug: %s\n", time.Now().Format("15:04:05"), fmt.Sprintf(format, a...)))
 }
 
 // Progress paints a live status line. Safe to call from one goroutine.

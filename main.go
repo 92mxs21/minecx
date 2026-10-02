@@ -217,9 +217,21 @@ func (a *App) run(ctx context.Context) error {
 
 	// [2/8] Java
 	a.Log.Printf("[2/8] Java bereitstellen")
-	javaBin, err := a.ensureJava(ctx, mc.JavaMajor)
-	if err != nil {
-		return err
+	var javaBin string
+	if a.Cfg.DryRun {
+		if bin, major := a.findJava(mc.JavaMajor); bin != "" {
+			javaBin = bin
+			a.Log.Printf("    Java      : %s (Version %d)", bin, major)
+		} else {
+			javaBin = "java"
+			a.Log.Printf("    Java      : nicht gefunden (dry-run: wuerde Temurin %d installieren)", mc.JavaMajor)
+		}
+	} else {
+		var err error
+		javaBin, err = a.ensureJava(ctx, mc.JavaMajor)
+		if err != nil {
+			return err
+		}
 	}
 
 	// [3/8] Fabric
@@ -248,6 +260,20 @@ func (a *App) run(ctx context.Context) error {
 		clientTasks = append(clientTasks, DownloadTask{
 			URL: mc.Log4jURL, Dest: log4jCfg, SHA1: mc.Log4jSHA1,
 		})
+	}
+
+	// Dry run: resolve everything and print the command without downloading.
+	if a.Cfg.DryRun {
+		spec := LaunchSpec{
+			JavaBin:    javaBin,
+			MainClass:  fabric.MainClass,
+			Classpath:  a.classpathFor(classpathLibs, clientJar),
+			MC:         mc,
+			AssetID:    mc.AssetID,
+			Log4jCfg:   log4jCfg,
+			NativesDir: a.Paths.Natives,
+		}
+		return a.launch(ctx, spec)
 	}
 
 	// [4/8] client, libraries, natives
@@ -332,11 +358,7 @@ func (a *App) run(ctx context.Context) error {
 	}
 
 	// Summary.
-	classpath := make([]string, 0, len(classpathLibs)+1)
-	for _, lib := range classpathLibs {
-		classpath = append(classpath, filepath.Join(a.Paths.Libraries, filepath.FromSlash(lib.RelPath)))
-	}
-	classpath = append(classpath, clientJar)
+	classpath := a.classpathFor(classpathLibs, clientJar)
 
 	spec := LaunchSpec{
 		JavaBin:    javaBin,
@@ -348,6 +370,15 @@ func (a *App) run(ctx context.Context) error {
 		NativesDir: a.Paths.Natives,
 	}
 	return a.launch(ctx, spec)
+}
+
+// classpathFor builds the java classpath from resolved libraries + client jar.
+func (a *App) classpathFor(libs []ResolvedLib, clientJar string) []string {
+	cp := make([]string, 0, len(libs)+1)
+	for _, lib := range libs {
+		cp = append(cp, filepath.Join(a.Paths.Libraries, filepath.FromSlash(lib.RelPath)))
+	}
+	return append(cp, clientJar)
 }
 
 func toTasks(base string, libs []ResolvedLib) []DownloadTask {
