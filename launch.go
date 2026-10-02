@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -80,6 +81,47 @@ func (a *App) patchSodiumOptions() {
 	}
 }
 
+func (a *App) withOfficialJVM(jvm []string, v VersionJSON, natives string) []string {
+	have := map[string]bool{}
+	for _, s := range jvm {
+		have[s] = true
+	}
+	skip := func(s string) bool {
+		if s == "-cp" {
+			return true
+		}
+		for _, p := range []string{
+			"-Djava.library.path=", "-Djna.tmpdir=",
+			"-Dorg.lwjgl.system.SharedLibraryExtractPath=", "-Dio.netty.native.workdir=",
+			"-Dminecraft.launcher.", "-XstartOnFirstThread", "-Xss", "-XX:HeapDumpPath=",
+		} {
+			if strings.HasPrefix(s, p) {
+				return true
+			}
+		}
+		return false
+	}
+	for _, arg := range v.Arguments.JVM {
+		if !rulesAllow(arg.Rules, osName(), runtime.GOARCH) {
+			continue
+		}
+		for _, val := range arg.Value {
+			val = strings.ReplaceAll(val, "${natives_directory}", natives)
+			val = strings.ReplaceAll(val, "${launcher_name}", appName)
+			val = strings.ReplaceAll(val, "${launcher_version}", version)
+			if strings.Contains(val, "${") || skip(val) || have[val] {
+				continue
+			}
+			if strings.HasPrefix(val, "-XX:StackShadowPages") && runtime.GOOS != "windows" {
+				continue
+			}
+			jvm = append(jvm, val)
+			have[val] = true
+		}
+	}
+	return jvm
+}
+
 func (a *App) buildCommand(spec LaunchSpec) []string {
 	ram := a.Cfg.RamGB
 	if ram < 1 {
@@ -119,6 +161,7 @@ func (a *App) buildCommand(spec LaunchSpec) []string {
 	if spec.Log4jCfg != "" && fileExists(spec.Log4jCfg) {
 		jvm = append(jvm, "-Dlog4j.configurationFile="+spec.Log4jCfg)
 	}
+	jvm = a.withOfficialJVM(jvm, spec.MC.Version, natives)
 
 	game := []string{
 		"--username", a.Cfg.User,

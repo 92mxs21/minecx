@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"runtime"
@@ -76,6 +77,10 @@ type VersionJSON struct {
 		} `json:"client"`
 	} `json:"logging"`
 	Libraries []Library `json:"libraries"`
+	Arguments struct {
+		JVM  []Argument `json:"jvm"`
+		Game []Argument `json:"game"`
+	} `json:"arguments"`
 }
 
 type AssetIndex struct {
@@ -83,6 +88,37 @@ type AssetIndex struct {
 		Hash string `json:"hash"`
 		Size int64  `json:"size"`
 	} `json:"objects"`
+}
+
+type Argument struct {
+	Rules []Rule
+	Value []string
+}
+
+func (a *Argument) UnmarshalJSON(b []byte) error {
+	var s string
+	if err := json.Unmarshal(b, &s); err == nil {
+		a.Value = []string{s}
+		return nil
+	}
+	var obj struct {
+		Rules []Rule          `json:"rules"`
+		Value json.RawMessage `json:"value"`
+	}
+	if err := json.Unmarshal(b, &obj); err != nil {
+		return err
+	}
+	a.Rules = obj.Rules
+	var arr []string
+	if err := json.Unmarshal(obj.Value, &arr); err == nil {
+		a.Value = arr
+		return nil
+	}
+	var one string
+	if err := json.Unmarshal(obj.Value, &one); err == nil {
+		a.Value = []string{one}
+	}
+	return nil
 }
 
 type MCResolved struct {
