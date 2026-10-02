@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const userAgent = appName + "/" + version + " (+https://github.com/DeutscherCOder/" + appName + ")"
+const userAgent = appName + "/" + version + " (+https://github.com/92mxs21/" + appName + ")"
 
 // Downloader is a small parallel, resumable, checksum-verifying fetcher.
 type Downloader struct {

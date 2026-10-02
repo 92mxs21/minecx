@@ -66,14 +66,14 @@ You need [Go](https://go.dev/dl/) 1.23 or newer. Nothing else.
 
 ```bash
 # Linux / SteamOS / Arch
-git clone https://github.com/DeutscherCOder/minecx
+git clone https://github.com/92mxs21/minecx
 cd minecx
 ./build.sh          # -> dist/minecx-linux-amd64 etc.
 ```
 
 ```powershell
 # Windows
-git clone https://github.com/DeutscherCOder/minecx
+git clone https://github.com/92mxs21/minecx
 cd minecx
 .\build.ps1         # -> dist\minecx-windows-amd64.exe etc.
 ```
