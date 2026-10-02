@@ -20,7 +20,7 @@ type modProject struct {
 var defaultMods = []modProject{
 	{"P7dR8mSH", "Fabric API"},
 	{"AANobbMI", "Sodium"},
-	{"YL57xqU", "Iris Shaders"},
+	{"YL57xq9U", "Iris Shaders"},
 	{"uXXizFIs", "FerriteCore"},
 	{"gvQqBUqZ", "Lithium"},
 	{"NNAgCjsB", "Entity Culling"},

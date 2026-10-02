@@ -103,6 +103,7 @@ minecx [options]
 | `--setup-only` | Install but do not launch | off |
 | `--dry-run` | Print the final launch command | off |
 | `--no-mods` | Skip installing mods | off |
+| `--reset-options` | Delete `options.txt` (recover from a graphics crash) | off |
 | `--clean` | Delete the install folder | off |
 | `-v, --verbose` | Debug logging | off |
 | `--version` | Print version | |
@@ -169,6 +170,9 @@ Override it with `--dir` or `MINECX_HOME` if you want it somewhere else.
 - **Game doesn't start / crashes on launch** → check the newest log in
   `<install>/logs/`. The launcher prints a warning if any required library
   failed to download; run it again to retry.
+- **Game crashes right after `Backend library: LWJGL` / `OpenGL Version`**
+  (seen on some AMD + SDL3 setups) → run `minecx --reset-options`. minecx also
+  automatically keeps `exclusiveFullscreen` disabled, which is a known trigger.
 - **SteamOS "Read-only file system"** → you are writing next to the binary in
   a system path. Use a folder in your home, e.g.
   `./minecx-linux-amd64 --dir ~/minecx`.

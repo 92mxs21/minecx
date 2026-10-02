@@ -73,6 +73,7 @@ func usage(fs *flag.FlagSet) {
     --setup-only       Nur installieren, nicht starten
     --dry-run          Startbefehl ausgeben, Spiel nicht starten
     --no-mods          Keine Mods installieren
+    --reset-options    options.txt loeschen (Hilfe bei Grafik-Absturz)
     --clean            Installationsordner loeschen und beenden
     -v, --verbose      Ausfuehrliches Debug-Log
     --version          Programmversion anzeigen
@@ -107,6 +108,7 @@ func parseFlags(args []string) (*Config, bool) {
 	fs.BoolVar(&cfg.SetupOnly, "setup-only", false, "Nur installieren")
 	fs.BoolVar(&cfg.DryRun, "dry-run", false, "Startbefehl ausgeben")
 	fs.BoolVar(&cfg.NoMods, "no-mods", false, "Keine Mods installieren")
+	fs.BoolVar(&cfg.ResetOptions, "reset-options", false, "options.txt zuruecksetzen")
 	fs.BoolVar(&cfg.Clean, "clean", false, "Installationsordner loeschen")
 	fs.BoolVar(&cfg.Verbose, "verbose", false, "Debug-Log")
 	fs.BoolVar(&cfg.Verbose, "v", false, "Debug-Log")
@@ -247,6 +249,11 @@ func (a *App) run(ctx context.Context) error {
 	// Gather everything that must be downloaded.
 	vanillaLibs, nativeLibs := collectVanilla(mc.Version)
 	classpathLibs := append(append([]ResolvedLib{}, vanillaLibs...), fabric.Libraries...)
+	// Native jars also go on the classpath so LWJGL loads/extracts them itself.
+	// Extracting them only to java.library.path causes native crashes on some
+	// AMD/SDL3 setups; the classpath route is what the official/working
+	// launchers use.
+	cpLibs := append(append([]ResolvedLib{}, classpathLibs...), nativeLibs...)
 
 	clientJar := filepath.Join(a.Paths.Versions, mc.ID, filepath.Base(filepath.FromSlash(mc.ClientPath)))
 
@@ -267,7 +274,7 @@ func (a *App) run(ctx context.Context) error {
 		spec := LaunchSpec{
 			JavaBin:    javaBin,
 			MainClass:  fabric.MainClass,
-			Classpath:  a.classpathFor(classpathLibs, clientJar),
+			Classpath:  a.classpathFor(cpLibs, clientJar),
 			MC:         mc,
 			AssetID:    mc.AssetID,
 			Log4jCfg:   log4jCfg,
@@ -358,7 +365,7 @@ func (a *App) run(ctx context.Context) error {
 	}
 
 	// Summary.
-	classpath := a.classpathFor(classpathLibs, clientJar)
+	classpath := a.classpathFor(cpLibs, clientJar)
 
 	spec := LaunchSpec{
 		JavaBin:    javaBin,

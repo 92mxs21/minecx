@@ -20,6 +20,48 @@ type LaunchSpec struct {
 	NativesDir string
 }
 
+// prepareOptions guards against a known crash: Minecraft 26.x uses SDL3, and on
+// some AMD drivers an *exclusive* fullscreen mode causes a native access
+// violation (0xc0000005) on startup. Borderless fullscreen is unaffected, so we
+// force `exclusiveFullscreen:false` while leaving the user's fullscreen choice
+// (`fullscreen:true/false`) untouched.
+func (a *App) prepareOptions() {
+	path := filepath.Join(a.Paths.Root, "options.txt")
+
+	if a.Cfg.ResetOptions {
+		if fileExists(path) {
+			if err := os.Remove(path); err == nil {
+				a.Log.Printf("    options.txt zurueckgesetzt (--reset-options)")
+			}
+		}
+		return
+	}
+
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return // no options yet; the game creates them safely on first run
+	}
+	lines := strings.Split(string(b), "\n")
+	found, changed := false, false
+	for i, ln := range lines {
+		if strings.HasPrefix(strings.TrimSpace(ln), "exclusiveFullscreen:") {
+			found = true
+			if strings.TrimSpace(ln) != "exclusiveFullscreen:false" {
+				lines[i] = "exclusiveFullscreen:false"
+				changed = true
+			}
+		}
+	}
+	if !found {
+		lines = append(lines, "exclusiveFullscreen:false")
+		changed = true
+	}
+	if changed {
+		a.Log.Printf("    Hinweis: exclusiveFullscreen deaktiviert (verhindert AMD/SDL3-Absturz)")
+		_ = os.WriteFile(path, []byte(strings.Join(lines, "\n")), 0o644)
+	}
+}
+
 // buildCommand assembles the JVM and game arguments.
 func (a *App) buildCommand(spec LaunchSpec) []string {
 	ram := a.Cfg.RamGB
@@ -52,7 +94,6 @@ func (a *App) buildCommand(spec LaunchSpec) []string {
 		"--add-exports", "java.base/jdk.internal.misc=ALL-UNNAMED",
 		"-Djava.library.path=" + natives,
 		"-Djna.tmpdir=" + filepath.Join(natives, "jna"),
-		"-Dorg.lwjgl.system.SharedLibraryExtractPath=" + filepath.Join(natives, "lwjgl"),
 		"-Dio.netty.native.workdir=" + filepath.Join(natives, "netty"),
 		"-Dfile.encoding=UTF-8",
 		"-Dminecraft.launcher.brand=" + appName,
@@ -83,6 +124,9 @@ func (a *App) buildCommand(spec LaunchSpec) []string {
 
 // launch either prints or runs the assembled command.
 func (a *App) launch(ctx context.Context, spec LaunchSpec) error {
+	if !a.Cfg.DryRun {
+		a.prepareOptions()
+	}
 	argv := a.buildCommand(spec)
 
 	if a.Cfg.DryRun {

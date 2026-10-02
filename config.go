@@ -9,22 +9,23 @@ import (
 
 const (
 	appName = "minecx"
-	version = "1.0.0"
+	version = "1.0.1"
 )
 
 // Config holds everything the user can influence from the command line.
 type Config struct {
-	Dir       string // install / game directory
-	MCVersion string // "latest" or a specific id such as "1.21.4"
-	User      string // offline-mode player name
-	RamGB     int    // max heap in GB (0 = auto)
-	Jobs      int    // parallel downloads (0 = auto)
-	Update    bool   // ignore pinned versions and move to latest
-	SetupOnly bool   // install but do not launch
-	DryRun    bool   // print the launch command, do not launch
-	Clean     bool   // delete the install directory and exit
-	Verbose   bool   // verbose logging
-	NoMods    bool   // skip the Modrinth mod installation
+	Dir          string // install / game directory
+	MCVersion    string // "latest" or a specific id such as "1.21.4"
+	User         string // offline-mode player name
+	RamGB        int    // max heap in GB (0 = auto)
+	Jobs         int    // parallel downloads (0 = auto)
+	Update       bool   // ignore pinned versions and move to latest
+	SetupOnly    bool   // install but do not launch
+	DryRun       bool   // print the launch command, do not launch
+	Clean        bool   // delete the install directory and exit
+	Verbose      bool   // verbose logging
+	NoMods       bool   // skip the Modrinth mod installation
+	ResetOptions bool   // delete options.txt before launching instead of patching it
 }
 
 // State is the small JSON file used to pin versions between runs.
