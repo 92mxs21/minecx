@@ -151,12 +151,21 @@ func (d *Downloader) downloadOnce(ctx context.Context, url, dest string) (int64,
 	if err != nil {
 		return 0, err
 	}
-	n, err := io.Copy(f, resp.Body)
-	if err != nil {
+	n, copyErr := io.Copy(f, resp.Body)
+	if copyErr != nil {
+		_ = f.Close()
+		return n, copyErr
+	}
+	if err := f.Sync(); err != nil {
 		_ = f.Close()
 		return n, err
 	}
-	return n, f.Sync()
+	// The handle MUST be closed before the caller renames the file; on Windows
+	// an open handle blocks os.Rename with a sharing violation.
+	if err := f.Close(); err != nil {
+		return n, err
+	}
+	return n, nil
 }
 
 // Run downloads every task with a bounded worker pool and returns any failures.
