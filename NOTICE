@@ -1,0 +1,27 @@
+minecx - legal notice
+======================
+
+minecx is a personal, open-source launcher that downloads the official
+Minecraft Java Edition client and mods from the vendors' own public servers
+(Mojang / Piston, FabricMC, Modrinth).
+
+It is NOT affiliated with, endorsed by, or sponsored by Mojang Studios,
+Microsoft, FabricMC, or Modrinth.
+
+You MUST own a legitimate copy of Minecraft Java Edition to use this software.
+minecx launches the game in "offline mode", which is intended only for personal,
+single-player use on a copy of the game that you own. Using offline mode to
+avoid buying the game, or to spoof an identity you do not own, is not permitted
+by the Minecraft End User License Agreement and may violate the Digital
+Millennium Copyright Act (DMCA) and other laws. That is your responsibility.
+
+minecx does not contain, bundle, or redistribute any Minecraft code, assets,
+sounds, textures, or other copyrighted material. Everything is downloaded at
+runtime directly from the official/public sources listed above. Downloading
+those files does not grant you a license to them beyond what you already own.
+
+This repository is provided for personal, educational, and interoperability
+purposes. If you are a rights holder and believe this project infringes your
+rights, open an issue and it will be addressed.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. See LICENSE.

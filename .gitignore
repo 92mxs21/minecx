@@ -1,0 +1,17 @@
+# Build output
+/dist/
+/build/
+/minecx
+/minecx.exe
+
+# Local launcher data (never commit a game install)
+/minecx-data/
+/.cache/
+*.part
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
