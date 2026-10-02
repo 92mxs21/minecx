@@ -16,9 +16,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { goos: windows, goarch: amd64, ext: ".exe" }
-          - { goos: linux,   goarch: amd64, ext: "" }
-          - { goos: linux,   goarch: arm64, ext: "" }
+          - { goos: windows, goarch: amd64, name: "minecx-windows-amd64.exe",     ldflags: "-s -w" }
+          - { goos: windows, goarch: amd64, name: "minecx-windows-amd64-gui.exe", ldflags: "-s -w -H=windowsgui" }
+          - { goos: linux,   goarch: amd64, name: "minecx-linux-amd64",           ldflags: "-s -w" }
+          - { goos: linux,   goarch: arm64, name: "minecx-linux-arm64",           ldflags: "-s -w" }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -31,11 +32,10 @@ jobs:
           CGO_ENABLED: '0'
         run: |
           mkdir -p dist
-          go build -trimpath -ldflags "-s -w" \
-            -o "dist/minecx-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}" .
+          go build -trimpath -ldflags "${{ matrix.ldflags }}" -o "dist/${{ matrix.name }}" .
       - uses: actions/upload-artifact@v4
         with:
-          name: minecx-${{ matrix.goos }}-${{ matrix.goarch }}
+          name: ${{ matrix.name }}
           path: dist/*
 
   release:

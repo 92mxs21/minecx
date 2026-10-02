@@ -179,7 +179,7 @@ func (a *App) buildCommand(spec LaunchSpec) []string {
 	cmd := append([]string{}, jvm...)
 	cmd = append(cmd, "-cp", strings.Join(spec.Classpath, classpathSep()), spec.MainClass)
 	cmd = append(cmd, game...)
-	return append([]string{spec.JavaBin}, cmd...)
+	return append([]string{gameJava(spec.JavaBin)}, cmd...)
 }
 
 func (a *App) launch(ctx context.Context, spec LaunchSpec) error {
@@ -219,8 +219,9 @@ func runGame(bin string, args []string, dir string) error {
 func (a *App) runWithRetry(bin string, args []string) error {
 	const attempts = 3
 	var err error
+	launcher := gameJava(bin)
 	for i := 0; i < attempts; i++ {
-		err = runGame(bin, args, a.Paths.Root)
+		err = runGame(launcher, args, a.Paths.Root)
 		if err == nil {
 			return nil
 		}
@@ -230,4 +231,17 @@ func (a *App) runWithRetry(bin string, args []string) error {
 		}
 	}
 	return err
+}
+
+func gameJava(bin string) string {
+	if runtime.GOOS != "windows" {
+		return bin
+	}
+	if strings.HasSuffix(strings.ToLower(bin), "java.exe") {
+		alt := bin[:len(bin)-len("java.exe")] + "javaw.exe"
+		if fileExists(alt) {
+			return alt
+		}
+	}
+	return bin
 }

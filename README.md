@@ -6,7 +6,7 @@ One source tree compiles to a single, dependency-free binary for:
 
 | Platform | Target | Notes |
 |---|---|---|
-| Windows 10/11 | `minecx-windows-amd64.exe` | no installer needed |
+| Windows 10/11 | `minecx-windows-amd64-gui.exe` (silent) or `minecx-windows-amd64.exe` | no installer needed |
 | Arch Linux | `minecx-linux-amd64` | static ELF |
 | SteamOS (Steam Deck) | `minecx-linux-amd64` | runs from `~/`, root FS is read-only |
 | Linux ARM64 | `minecx-linux-arm64` | for ARM servers/SBCs |
@@ -42,7 +42,7 @@ See [`NOTICE`](NOTICE) for the full text.
 
 1. Open the [**Releases**](../../releases) page.
 2. Download the file for your OS:
-   - Windows → `minecx-windows-amd64.exe`
+   - Windows → `minecx-windows-amd64-gui.exe` (silent, no console — recommended) or `minecx-windows-amd64.exe` (shows a console for debugging)
    - SteamOS / Arch Linux → `minecx-linux-amd64`
 3. Run it.
 
@@ -56,6 +56,12 @@ Windows (PowerShell):
 ```powershell
 .\minecx-windows-amd64.exe
 ```
+
+> **Silent vs. console (Windows):** `minecx-windows-amd64-gui.exe` is built as a
+> GUI app, so **no black console/log window** ever appears (like TLauncher et al.),
+> and it launches the game with `javaw`. Everything is still written to
+> `<install>/logs/`, and real errors show a popup. The plain
+> `minecx-windows-amd64.exe` keeps the console if you want to watch output.
 
 The first run downloads Minecraft (a few hundred MB) and then starts it.
 Every later run only downloads what changed.

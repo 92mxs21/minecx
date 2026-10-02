@@ -181,6 +181,7 @@ func parseFlags(args []string) (*Config, bool) {
 }
 
 func main() {
+	attachConsole()
 	cfg, _ := parseFlags(os.Args[1:])
 
 	root, err := filepath.Abs(cfg.Dir)
@@ -200,7 +201,7 @@ func main() {
 
 	paths := buildPaths(root)
 	if err := paths.Ensure(); err != nil {
-		fmt.Fprintf(os.Stderr, "Fehler: Installationsordner nicht nutzbar: %v\n", err)
+		showError(appName, "Installationsordner nicht nutzbar:\n"+err.Error())
 		os.Exit(1)
 	}
 
@@ -219,6 +220,7 @@ func main() {
 	if err := app.run(ctx); err != nil {
 		log.Printf("FEHLER: %v", err)
 		log.Printf("Abbruch. Details: %s", logPath)
+		showError(appName+" - Fehler", err.Error()+"\n\nDetails:\n"+logPath)
 		os.Exit(1)
 	}
 }
