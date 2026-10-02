@@ -9,6 +9,26 @@
 /.cache/
 *.part
 
+# Never commit a Minecraft install / runtime data
+/config/
+/logs/
+/mods/
+/saves/
+/shaderpacks/
+/resourcepacks/
+/versions/
+/libraries/
+/assets/
+/natives/
+/runtime/
+/.fabric/
+/options.txt
+/servers.dat
+/servers.dat_old
+/command_history.txt
+/.managed-mods
+/.minecx-state.json
+
 # Editor / OS noise
 .DS_Store
 Thumbs.db
