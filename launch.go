@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type LaunchSpec struct {
@@ -52,6 +54,22 @@ func (a *App) prepareOptions() {
 	if changed {
 		a.Log.Printf("    Hinweis: exclusiveFullscreen deaktiviert (verhindert AMD/SDL3-Absturz)")
 		_ = os.WriteFile(path, []byte(strings.Join(lines, "\n")), 0o644)
+	}
+	a.patchSodiumOptions()
+}
+
+func (a *App) patchSodiumOptions() {
+	path := filepath.Join(a.Paths.Config, "sodium-options.json")
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return
+	}
+	s := string(b)
+	if strings.Contains(s, `"use_no_error_g_l_context": true`) {
+		s = strings.Replace(s, `"use_no_error_g_l_context": true`, `"use_no_error_g_l_context": false`, 1)
+		if err := os.WriteFile(path, []byte(s), 0o644); err == nil {
+			a.Log.Printf("    Hinweis: Sodium 'no error GL context' aus (AMD-Stabilitaet)")
+		}
 	}
 }
 
@@ -136,5 +154,30 @@ func (a *App) launch(ctx context.Context, spec LaunchSpec) error {
 	a.Log.Printf("  Starte Minecraft %s (Fabric %s, %s, %dG)", spec.MC.ID, a.fabricLoader, a.Cfg.User, a.Cfg.RamGB)
 	a.Log.Printf("  Beenden: Strg+C  |  Voice-Chat-Port: UDP 24465 (Firewall noetig)")
 
-	return runGame(spec.JavaBin, argv[1:], a.Paths.Root)
+	return a.runWithRetry(spec.JavaBin, argv[1:])
+}
+
+func runGame(bin string, args []string, dir string) error {
+	cmd := exec.Command(bin, args...)
+	cmd.Dir = dir
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+func (a *App) runWithRetry(bin string, args []string) error {
+	const attempts = 3
+	var err error
+	for i := 0; i < attempts; i++ {
+		err = runGame(bin, args, a.Paths.Root)
+		if err == nil {
+			return nil
+		}
+		if i < attempts-1 {
+			a.Log.Printf("    Spiel abgestuerzt (%v) - automatischer Neustart %d/%d ...", err, i+2, attempts)
+			time.Sleep(3 * time.Second)
+		}
+	}
+	return err
 }
