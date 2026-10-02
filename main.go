@@ -66,6 +66,8 @@ func usage(fs *flag.FlagSet) {
   Optionen:
     --mc <version>     Minecraft-Version (Standard: latest, z.B. 1.21.4)
     --user <name>      Offline-Spielername (Standard: %s)
+    --skin <pfad|url>  Skin als PNG-Datei oder URL (OfflineSkins)
+    --config <datei>   config.txt verwenden
     --ram <gb>         Maximaler Java-RAM (Standard: automatisch)
     --dir <pfad>       Installations-/Spielordner (Standard: %s)
     --jobs <n>         Parallele Downloads (Standard: automatisch)
@@ -101,6 +103,8 @@ func parseFlags(args []string) (*Config, bool) {
 	)
 	fs.StringVar(&cfg.MCVersion, "mc", "latest", "Minecraft-Version")
 	fs.StringVar(&cfg.User, "user", defaultUser(), "Spielername")
+	fs.StringVar(&cfg.Skin, "skin", "", "Skin (URL oder PNG-Datei)")
+	fs.StringVar(&cfg.ConfigFile, "config", "", "config.txt Pfad")
 	fs.IntVar(&cfg.RamGB, "ram", 0, "RAM in GB")
 	fs.StringVar(&cfg.Dir, "dir", "", "Installationsordner")
 	fs.IntVar(&cfg.Jobs, "jobs", 0, "Parallele Downloads")
@@ -131,20 +135,48 @@ func parseFlags(args []string) (*Config, bool) {
 		os.Exit(0)
 	}
 
+	set := map[string]bool{}
+	fs.Visit(func(f *flag.Flag) { set[f.Name] = true })
+
 	if cfg.Dir == "" {
 		cfg.Dir = os.Getenv("MINECX_HOME")
 	}
 	if cfg.Dir == "" {
 		cfg.Dir = defaultDataDir()
 	}
+
+	if path := findConfigFile(cfg.ConfigFile, cfg.Dir); path != "" {
+		if fc, err := parseConfigFile(path); err == nil {
+			cfg.ConfigFile = path
+			if fc.Name != "" && !set["user"] {
+				cfg.User = fc.Name
+			}
+			if fc.Skin != "" && !set["skin"] {
+				cfg.Skin = fc.Skin
+			}
+			if fc.Model != "" {
+				cfg.SkinModel = fc.Model
+			}
+			if fc.MC != "" && !set["mc"] {
+				cfg.MCVersion = fc.MC
+			}
+			if fc.Ram > 0 && !set["ram"] {
+				cfg.RamGB = fc.Ram
+			}
+			if fc.Jobs > 0 && !set["jobs"] {
+				cfg.Jobs = fc.Jobs
+			}
+		}
+	}
+
+	if strings.TrimSpace(cfg.User) == "" {
+		cfg.User = defaultUser()
+	}
 	if cfg.Jobs <= 0 {
 		cfg.Jobs = autoJobs()
 	}
 	if cfg.RamGB <= 0 {
 		cfg.RamGB = autoRamGB()
-	}
-	if strings.TrimSpace(cfg.User) == "" {
-		cfg.User = defaultUser()
 	}
 	return &cfg, true
 }
@@ -349,6 +381,12 @@ func (a *App) run(ctx context.Context) error {
 	} else {
 		if err := a.installMods(ctx, mc.ID); err != nil {
 			a.Log.Printf("    WARNUNG: Mods konnten nicht vollstaendig installiert werden: %v", err)
+		}
+	}
+
+	if strings.TrimSpace(a.Cfg.Skin) != "" {
+		if err := a.setupSkin(ctx); err != nil {
+			a.Log.Printf("    WARNUNG: Skin konnte nicht eingerichtet werden: %v", err)
 		}
 	}
 

@@ -9,7 +9,7 @@ import (
 
 const (
 	appName = "minecx"
-	version = "1.0.1"
+	version = "1.1.0"
 )
 
 // Config holds everything the user can influence from the command line.
@@ -17,6 +17,9 @@ type Config struct {
 	Dir          string // install / game directory
 	MCVersion    string // "latest" or a specific id such as "1.21.4"
 	User         string // offline-mode player name
+	Skin         string // URL or local path to a skin PNG ("" = disabled)
+	SkinModel    string // "steve" (classic) or "alex" (slim)
+	ConfigFile   string // explicit config.txt path
 	RamGB        int    // max heap in GB (0 = auto)
 	Jobs         int    // parallel downloads (0 = auto)
 	Update       bool   // ignore pinned versions and move to latest
@@ -25,7 +28,7 @@ type Config struct {
 	Clean        bool   // delete the install directory and exit
 	Verbose      bool   // verbose logging
 	NoMods       bool   // skip the Modrinth mod installation
-	ResetOptions bool   // delete options.txt before launching instead of patching it
+	ResetOptions bool   // delete options.txt before launching
 }
 
 // State is the small JSON file used to pin versions between runs.
@@ -88,11 +91,8 @@ func (p Paths) Ensure() error {
 	return nil
 }
 
-// defaultDataDir picks a user-writable persistent location.
-//
-// SteamOS has an immutable, read-only root filesystem, so the install must
-// live under the user's home. On Linux we follow the XDG base directory spec;
-// on Windows we use %APPDATA%.
+// defaultDataDir picks a user-writable persistent location. SteamOS has an
+// immutable read-only root, so the install must live under the user's home.
 func defaultDataDir() string {
 	if runtime.GOOS == "windows" {
 		if ad := os.Getenv("APPDATA"); ad != "" {

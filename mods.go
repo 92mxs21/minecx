@@ -34,6 +34,17 @@ var defaultMods = []modProject{
 	{"9eGKb6K1", "Simple Voice Chat"},
 }
 
+var skinMod = modProject{"dUHrybXD", "OfflineSkins"}
+
+// modProjects is the curated set plus OfflineSkins when a skin is configured.
+func (a *App) modProjects() []modProject {
+	projects := append([]modProject{}, defaultMods...)
+	if strings.TrimSpace(a.Cfg.Skin) != "" {
+		projects = append(projects, skinMod)
+	}
+	return projects
+}
+
 type modrinthVersion struct {
 	VersionNumber string `json:"version_number"`
 	Files         []struct {
@@ -86,12 +97,12 @@ func pickPrimary(v *modrinthVersion) (downloadURL, filename, sha1 string, size i
 	return f.URL, f.Filename, f.Hashes.SHA1, f.Size, true
 }
 
-// collectMods resolves the curated mods plus their required dependencies.
-func (a *App) collectMods(ctx context.Context, mcVersion string) (tasks []DownloadTask, summary []modSummary, managed []string, failures []string) {
+// collectMods resolves the given projects plus their required dependencies.
+func (a *App) collectMods(ctx context.Context, mcVersion string, projects []modProject) (tasks []DownloadTask, summary []modSummary, managed []string, failures []string) {
 	seen := map[string]bool{}
-	queue := make([]string, 0, len(defaultMods))
+	queue := make([]string, 0, len(projects))
 	names := map[string]string{}
-	for _, m := range defaultMods {
+	for _, m := range projects {
 		queue = append(queue, m.ID)
 		names[m.ID] = m.Name
 	}
@@ -138,7 +149,7 @@ func (a *App) collectMods(ctx context.Context, mcVersion string) (tasks []Downlo
 // installMods downloads mods and removes files this launcher managed before.
 func (a *App) installMods(ctx context.Context, mcVersion string) error {
 	a.Log.Printf("[7/8] Mods (Modrinth-API)")
-	tasks, summary, managed, resolveFail := a.collectMods(ctx, mcVersion)
+	tasks, summary, managed, resolveFail := a.collectMods(ctx, mcVersion, a.modProjects())
 	for _, f := range resolveFail {
 		a.Log.Printf("    WARNUNG: %s", f)
 	}

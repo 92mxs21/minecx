@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -145,10 +144,5 @@ func (a *App) launch(ctx context.Context, spec LaunchSpec) error {
 	a.Log.Printf("  Starte Minecraft %s (Fabric %s, %s, %dG)", spec.MC.ID, a.fabricLoader, a.Cfg.User, a.Cfg.RamGB)
 	a.Log.Printf("  Beenden: Strg+C  |  Voice-Chat-Port: UDP 24465 (Firewall noetig)")
 
-	cmd := exec.CommandContext(ctx, spec.JavaBin, argv[1:]...)
-	cmd.Dir = a.Paths.Root
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	return runGame(spec.JavaBin, argv[1:], a.Paths.Root)
 }
