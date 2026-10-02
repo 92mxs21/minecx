@@ -8,7 +8,6 @@ import (
 	"strings"
 )
 
-// LaunchSpec is the fully resolved information needed to start the game.
 type LaunchSpec struct {
 	JavaBin    string
 	MainClass  string
@@ -19,11 +18,6 @@ type LaunchSpec struct {
 	NativesDir string
 }
 
-// prepareOptions guards against a known crash: Minecraft 26.x uses SDL3, and on
-// some AMD drivers an *exclusive* fullscreen mode causes a native access
-// violation (0xc0000005) on startup. Borderless fullscreen is unaffected, so we
-// force `exclusiveFullscreen:false` while leaving the user's fullscreen choice
-// (`fullscreen:true/false`) untouched.
 func (a *App) prepareOptions() {
 	path := filepath.Join(a.Paths.Root, "options.txt")
 
@@ -38,7 +32,7 @@ func (a *App) prepareOptions() {
 
 	b, err := os.ReadFile(path)
 	if err != nil {
-		return // no options yet; the game creates them safely on first run
+		return
 	}
 	lines := strings.Split(string(b), "\n")
 	found, changed := false, false
@@ -61,7 +55,6 @@ func (a *App) prepareOptions() {
 	}
 }
 
-// buildCommand assembles the JVM and game arguments.
 func (a *App) buildCommand(spec LaunchSpec) []string {
 	ram := a.Cfg.RamGB
 	if ram < 1 {
@@ -121,7 +114,6 @@ func (a *App) buildCommand(spec LaunchSpec) []string {
 	return append([]string{spec.JavaBin}, cmd...)
 }
 
-// launch either prints or runs the assembled command.
 func (a *App) launch(ctx context.Context, spec LaunchSpec) error {
 	if !a.Cfg.DryRun {
 		a.prepareOptions()

@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-// Logger writes to both the terminal and a log file. It also owns the simple
-// single-line progress display used while downloading.
 type Logger struct {
 	mu      sync.Mutex
 	file    *os.File
@@ -67,7 +65,6 @@ func (l *Logger) Verbosef(format string, a ...any) {
 	l.writeLocked(fmt.Sprintf("%s  debug: %s\n", time.Now().Format("15:04:05"), fmt.Sprintf(format, a...)))
 }
 
-// Progress paints a live status line. Safe to call from one goroutine.
 func (l *Logger) Progress(s string) {
 	l.mu.Lock()
 	defer l.mu.Unlock()

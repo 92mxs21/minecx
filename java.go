@@ -13,7 +13,6 @@ import (
 
 var javaVersionRE = regexp.MustCompile(`version "(\d+)(?:\.(\d+))?`)
 
-// javaMajor reads the major version from `java -version` output.
 func javaMajor(path string) (int, error) {
 	out, err := exec.Command(path, "-version").CombinedOutput()
 	if err != nil && len(out) == 0 {
@@ -30,7 +29,6 @@ func javaMajor(path string) (int, error) {
 	return major, nil
 }
 
-// findJava returns a Java executable that is at least minMajor, or "".
 func (a *App) findJava(minMajor int) (string, int) {
 	var candidates []string
 	if jh := os.Getenv("JAVA_HOME"); jh != "" {
@@ -39,7 +37,7 @@ func (a *App) findJava(minMajor int) (string, int) {
 	if p, err := exec.LookPath("java"); err == nil {
 		candidates = append(candidates, p)
 	}
-	// A JDK we installed on an earlier run.
+
 	candidates = append(candidates, filepath.Join(runtimeDirForJava(a.Paths.Runtime, minMajor), "bin", exeName("java")))
 
 	for _, c := range candidates {
@@ -74,7 +72,6 @@ func adoptiumArch(goarch string) string {
 	}
 }
 
-// ensureJava finds or installs a suitable JDK and returns the java binary path.
 func (a *App) ensureJava(ctx context.Context, required int) (string, error) {
 	if bin, major := a.findJava(required); bin != "" {
 		a.Log.Printf("    Java      : %s (Version %d)", bin, major)

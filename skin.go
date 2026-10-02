@@ -10,8 +10,6 @@ import (
 	"strings"
 )
 
-// setupSkin installs a local skin for offline play using the OfflineSkins mod
-// convention: config/offlineskins/<name>.png + config.json.
 func (a *App) setupSkin(ctx context.Context) error {
 	src := strings.TrimSpace(a.Cfg.Skin)
 	if src == "" {

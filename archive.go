@@ -11,8 +11,6 @@ import (
 	"strings"
 )
 
-// unzipInto extracts a zip archive, preserving relative paths and refusing
-// entries that would escape the destination directory.
 func unzipInto(archive, dest string) error {
 	r, err := zip.OpenReader(archive)
 	if err != nil {
@@ -58,8 +56,6 @@ func unzipInto(archive, dest string) error {
 	return nil
 }
 
-// extractTarGz extracts a .tar.gz archive (used for Linux JDKs), including
-// symlinks and hard links.
 func extractTarGz(archive, dest string) error {
 	f, err := os.Open(archive)
 	if err != nil {
@@ -114,7 +110,7 @@ func extractTarGz(archive, dest string) error {
 			}
 			_ = os.Remove(target)
 			if err := os.Symlink(hdr.Linkname, target); err != nil {
-				// Symlinks are not essential for a JDK to run; ignore failures.
+
 				continue
 			}
 		case tar.TypeLink:
@@ -128,8 +124,6 @@ func extractTarGz(archive, dest string) error {
 	return nil
 }
 
-// unzipFlat extracts native binaries (.so/.dll/.dylib) to the root of dest,
-// discarding directory structure so a single java.library.path works.
 func unzipFlat(archive, dest string) (int, error) {
 	r, err := zip.OpenReader(archive)
 	if err != nil {
@@ -171,7 +165,6 @@ func unzipFlat(archive, dest string) (int, error) {
 	return n, nil
 }
 
-// within reports whether target is inside root.
 func within(root, target string) bool {
 	if target == root {
 		return true
@@ -179,7 +172,6 @@ func within(root, target string) bool {
 	return strings.HasPrefix(target, root+string(os.PathSeparator))
 }
 
-// findJavaHome locates the extracted JDK directory that contains bin/java.
 func findJavaHome(root string) string {
 	entries, err := os.ReadDir(root)
 	if err != nil {
@@ -197,7 +189,6 @@ func findJavaHome(root string) string {
 	return ""
 }
 
-// runtimeDirForJava reports the target directory name for a JDK major version.
 func runtimeDirForJava(root string, major int) string {
 	return filepath.Join(root, fmt.Sprintf("java-%d", major))
 }

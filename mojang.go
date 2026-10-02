@@ -8,10 +8,6 @@ import (
 	"strings"
 )
 
-// ---------------------------------------------------------------------------
-// Mojang / Piston data model
-// ---------------------------------------------------------------------------
-
 type VersionManifest struct {
 	Latest struct {
 		Release  string `json:"release"`
@@ -89,7 +85,6 @@ type AssetIndex struct {
 	} `json:"objects"`
 }
 
-// MCResolved is everything needed to install one Minecraft version.
 type MCResolved struct {
 	ID         string
 	Version    VersionJSON
@@ -106,17 +101,12 @@ type MCResolved struct {
 	Log4jSHA1  string
 }
 
-// ResolvedLib is a pending download relative to a base directory.
 type ResolvedLib struct {
 	URL     string
 	RelPath string
 	SHA1    string
 	Size    int64
 }
-
-// ---------------------------------------------------------------------------
-// Rule evaluation (same algorithm as the official launcher)
-// ---------------------------------------------------------------------------
 
 func archMatches(want, goarch string) bool {
 	switch want {
@@ -139,8 +129,7 @@ func ruleMatches(r Rule, name, arch string) bool {
 	if r.OS.Arch != "" && !archMatches(r.OS.Arch, arch) {
 		return false
 	}
-	// Demo mode and custom resolutions are never enabled by this launcher,
-	// so any rule that depends on a feature does not apply.
+
 	for _, v := range r.Features {
 		if v {
 			return false
@@ -149,7 +138,6 @@ func ruleMatches(r Rule, name, arch string) bool {
 	return true
 }
 
-// rulesAllow applies Mojang's "last matching rule wins" semantics.
 func rulesAllow(rules []Rule, name, arch string) bool {
 	if len(rules) == 0 {
 		return true
@@ -162,10 +150,6 @@ func rulesAllow(rules []Rule, name, arch string) bool {
 	}
 	return allowed
 }
-
-// ---------------------------------------------------------------------------
-// Resolution
-// ---------------------------------------------------------------------------
 
 const pistonManifestURL = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
 
@@ -230,7 +214,6 @@ func (a *App) resolveMinecraft(ctx context.Context) (*MCResolved, error) {
 	}, nil
 }
 
-// collectVanilla splits the vanilla libraries into classpath jars and natives.
 func collectVanilla(v VersionJSON) (libs, natives []ResolvedLib) {
 	name := osName()
 	arch := runtime.GOARCH
@@ -253,7 +236,7 @@ func collectVanilla(v VersionJSON) (libs, natives []ResolvedLib) {
 				libs = append(libs, rl)
 			}
 		}
-		// Legacy libraries declare natives through a classifier map.
+
 		if l.Natives != nil {
 			if key, ok := l.Natives[name]; ok {
 				if a, ok := l.Downloads.Classifiers[key]; ok && a.URL != "" {
@@ -268,7 +251,6 @@ func collectVanilla(v VersionJSON) (libs, natives []ResolvedLib) {
 	return libs, natives
 }
 
-// collectAssets turns an asset index into a flat download list.
 func collectAssets(index AssetIndex) []ResolvedLib {
 	out := make([]ResolvedLib, 0, len(index.Objects))
 	for _, obj := range index.Objects {

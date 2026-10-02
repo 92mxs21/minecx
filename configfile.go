@@ -8,7 +8,6 @@ import (
 	"strings"
 )
 
-// fileConfig is the content of the simple config.txt.
 type fileConfig struct {
 	Path  string
 	Name  string
@@ -19,8 +18,6 @@ type fileConfig struct {
 	Jobs  int
 }
 
-// findConfigFile locates config.txt: an explicit path wins, then next to the
-// executable, then the install directory, then the working directory.
 func findConfigFile(explicit, installDir string) string {
 	if explicit != "" {
 		if fileExists(explicit) {
@@ -44,7 +41,6 @@ func findConfigFile(explicit, installDir string) string {
 	return ""
 }
 
-// parseConfigFile reads a dead-simple "key: value" file.
 func parseConfigFile(path string) (fileConfig, error) {
 	fc := fileConfig{Path: path}
 	f, err := os.Open(path)

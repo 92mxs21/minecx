@@ -16,7 +16,6 @@ import (
 
 const userAgent = appName + "/" + version + " (+https://github.com/92mxs21/" + appName + ")"
 
-// Downloader is a small parallel, resumable, checksum-verifying fetcher.
 type Downloader struct {
 	Jobs   int
 	Client *http.Client
@@ -40,7 +39,6 @@ func NewDownloader(jobs int, log *Logger) *Downloader {
 	}
 }
 
-// DownloadTask is one file to fetch and verify.
 type DownloadTask struct {
 	URL  string
 	Dest string
@@ -50,12 +48,11 @@ type DownloadTask struct {
 
 type dlResult struct {
 	task   DownloadTask
-	status string // "ok" | "skip" | "fail"
+	status string
 	bytes  int64
 	err    error
 }
 
-// GetJSON performs a GET and decodes the body as JSON.
 func (d *Downloader) GetJSON(ctx context.Context, url string, out any) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -160,15 +157,13 @@ func (d *Downloader) downloadOnce(ctx context.Context, url, dest string) (int64,
 		_ = f.Close()
 		return n, err
 	}
-	// The handle MUST be closed before the caller renames the file; on Windows
-	// an open handle blocks os.Rename with a sharing violation.
+
 	if err := f.Close(); err != nil {
 		return n, err
 	}
 	return n, nil
 }
 
-// Run downloads every task with a bounded worker pool and returns any failures.
 func (d *Downloader) Run(ctx context.Context, label string, tasks []DownloadTask) []string {
 	if len(tasks) == 0 {
 		d.Log.Printf("    %-12s nichts zu tun", label)

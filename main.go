@@ -13,7 +13,6 @@ import (
 	"time"
 )
 
-// App bundles everything a run needs.
 type App struct {
 	Cfg          *Config
 	Paths        Paths
@@ -235,13 +234,11 @@ func printHeader(a *App) {
 	a.Log.Printf("================================================================")
 }
 
-// run is the full install-and-launch pipeline.
 func (a *App) run(ctx context.Context) error {
-	// [0/8] system check
+
 	a.Log.Printf("[0/8] System pruefen")
 	a.Log.Printf("    Arch      : %s", runtime.GOARCH)
 
-	// [1/8] Minecraft version
 	a.Log.Printf("[1/8] Minecraft-Version ermitteln")
 	mc, err := a.resolveMinecraft(ctx)
 	if err != nil {
@@ -249,7 +246,6 @@ func (a *App) run(ctx context.Context) error {
 	}
 	a.Log.Printf("    Minecraft : %s (Java %d, Assets %s)", mc.ID, mc.JavaMajor, mc.AssetID)
 
-	// [2/8] Java
 	a.Log.Printf("[2/8] Java bereitstellen")
 	var javaBin string
 	if a.Cfg.DryRun {
@@ -268,7 +264,6 @@ func (a *App) run(ctx context.Context) error {
 		}
 	}
 
-	// [3/8] Fabric
 	a.Log.Printf("[3/8] Fabric installieren")
 	fabric, err := a.resolveFabric(ctx, mc)
 	if err != nil {
@@ -278,13 +273,9 @@ func (a *App) run(ctx context.Context) error {
 	a.Log.Printf("    Loader    : %s", fabric.Loader)
 	a.Log.Printf("    MainClass : %s", fabric.MainClass)
 
-	// Gather everything that must be downloaded.
 	vanillaLibs, nativeLibs := collectVanilla(mc.Version)
 	classpathLibs := append(append([]ResolvedLib{}, vanillaLibs...), fabric.Libraries...)
-	// Native jars also go on the classpath so LWJGL loads/extracts them itself.
-	// Extracting them only to java.library.path causes native crashes on some
-	// AMD/SDL3 setups; the classpath route is what the official/working
-	// launchers use.
+
 	cpLibs := append(append([]ResolvedLib{}, classpathLibs...), nativeLibs...)
 
 	clientJar := filepath.Join(a.Paths.Versions, mc.ID, filepath.Base(filepath.FromSlash(mc.ClientPath)))
@@ -301,7 +292,6 @@ func (a *App) run(ctx context.Context) error {
 		})
 	}
 
-	// Dry run: resolve everything and print the command without downloading.
 	if a.Cfg.DryRun {
 		spec := LaunchSpec{
 			JavaBin:    javaBin,
@@ -315,7 +305,6 @@ func (a *App) run(ctx context.Context) error {
 		return a.launch(ctx, spec)
 	}
 
-	// [4/8] client, libraries, natives
 	a.Log.Printf("[4/8] Client, Libraries und Natives laden")
 	a.Log.Printf("    Libraries : %d JARs, Natives: %d JARs", len(classpathLibs), len(nativeLibs))
 
@@ -337,7 +326,6 @@ func (a *App) run(ctx context.Context) error {
 		return fmt.Errorf("Client-JAR/Log4j konnte nicht geladen werden")
 	}
 
-	// [5/8] extract natives
 	a.Log.Printf("[5/8] Native Bibliotheken entpacken")
 	nativeFiles := 0
 	for _, lib := range nativeLibs {
@@ -354,7 +342,6 @@ func (a *App) run(ctx context.Context) error {
 	}
 	a.Log.Printf("    Entpackt  : %d native Dateien -> %s", nativeFiles, a.Paths.Natives)
 
-	// [6/8] assets
 	a.Log.Printf("[6/8] Assets (Texturen, Sounds, Sprachen)")
 	indexPath := filepath.Join(a.Paths.Assets, "indexes", mc.AssetID+".json")
 	if failures := a.DL.Run(ctx, "Asset-Index", []DownloadTask{{
@@ -375,7 +362,6 @@ func (a *App) run(ctx context.Context) error {
 		a.Log.Printf("    WARNUNG: %d Assets fehlen (einzelne Sounds/Texturen fehlen evtl.)", len(failures))
 	}
 
-	// [7/8] mods
 	if a.Cfg.NoMods {
 		a.Log.Printf("[7/8] Mods uebersprungen (--no-mods)")
 	} else {
@@ -390,7 +376,6 @@ func (a *App) run(ctx context.Context) error {
 		}
 	}
 
-	// Persist state.
 	state := State{
 		MCVersion:   mc.ID,
 		Loader:      fabric.Loader,
@@ -402,7 +387,6 @@ func (a *App) run(ctx context.Context) error {
 		a.Log.Printf("    WARNUNG: Zustand nicht speicherbar: %v", err)
 	}
 
-	// Summary.
 	classpath := a.classpathFor(cpLibs, clientJar)
 
 	spec := LaunchSpec{
@@ -417,7 +401,6 @@ func (a *App) run(ctx context.Context) error {
 	return a.launch(ctx, spec)
 }
 
-// classpathFor builds the java classpath from resolved libraries + client jar.
 func (a *App) classpathFor(libs []ResolvedLib, clientJar string) []string {
 	cp := make([]string, 0, len(libs)+1)
 	for _, lib := range libs {

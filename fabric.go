@@ -26,7 +26,6 @@ type FabricProfile struct {
 	} `json:"libraries"`
 }
 
-// FabricResolved is the result of resolving the Fabric loader for a version.
 type FabricResolved struct {
 	Loader    string
 	MainClass string
@@ -34,8 +33,6 @@ type FabricResolved struct {
 	Libraries []ResolvedLib
 }
 
-// mavenToURL converts a Maven coordinate into a URL and a relative path.
-// Supports the optional classifier form group:artifact:version:classifier.
 func mavenToURL(name, base string) (downloadURL, relPath string, ok bool) {
 	parts := strings.Split(name, ":")
 	if len(parts) < 3 {
@@ -62,8 +59,6 @@ func mavenToURL(name, base string) (downloadURL, relPath string, ok bool) {
 	return base + relPath, relPath, true
 }
 
-// resolveFabric finds the loader profile for a Minecraft version and pins it
-// through the state file unless --update was given.
 func (a *App) resolveFabric(ctx context.Context, mc *MCResolved) (*FabricResolved, error) {
 	state := loadState(a.Paths.StateFile)
 

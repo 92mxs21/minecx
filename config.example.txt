@@ -1,0 +1,5 @@
+name: Erik
+skin: skin.png
+model: steve
+ram: 6
+mc: latest

@@ -10,7 +10,6 @@ import (
 	"strings"
 )
 
-// sha1File returns the lowercase hex SHA-1 of a file.
 func sha1File(path string) (string, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -29,7 +28,6 @@ func fileExists(p string) bool {
 	return err == nil && !fi.IsDir()
 }
 
-// humanBytes formats a byte count for humans.
 func humanBytes(b int64) string {
 	const (
 		gb = 1 << 30
@@ -48,7 +46,6 @@ func humanBytes(b int64) string {
 	}
 }
 
-// classpathSep is the OS-specific java classpath separator.
 func classpathSep() string {
 	if runtime.GOOS == "windows" {
 		return ";"
@@ -56,7 +53,6 @@ func classpathSep() string {
 	return ":"
 }
 
-// exeName appends .exe on Windows.
 func exeName(name string) string {
 	if runtime.GOOS == "windows" {
 		return name + ".exe"
@@ -64,7 +60,6 @@ func exeName(name string) string {
 	return name
 }
 
-// osName maps the Go OS to the name Mojang uses in library rules.
 func osName() string {
 	switch runtime.GOOS {
 	case "windows":
@@ -76,7 +71,6 @@ func osName() string {
 	}
 }
 
-// ensureDir creates a directory (and parents) if needed.
 func ensureDir(p string) error {
 	if p == "" {
 		return nil
@@ -84,7 +78,6 @@ func ensureDir(p string) error {
 	return os.MkdirAll(p, 0o755)
 }
 
-// sanitizeName makes a string safe to use as a file name on every OS.
 func sanitizeName(s string) string {
 	return strings.Map(func(r rune) rune {
 		if strings.ContainsRune(`<>:"/\|?*`, r) {
@@ -94,25 +87,17 @@ func sanitizeName(s string) string {
 	}, s)
 }
 
-// isNativePath reports whether a Maven path refers to a native library jar
-// rather than a plain classpath jar.
 func isNativePath(p string) bool {
 	l := strings.ToLower(p)
 	return strings.Contains(l, "natives-") || strings.Contains(l, "-natives")
 }
 
-// nativeArchOK filters arch-suffixed native jars. Modern version manifests
-// list e.g. both `natives-windows` and `natives-windows-arm64` with the same
-// OS rule, so the architecture must be selected from the artifact name.
-//
-// On Linux only a single `natives-linux` jar is published (no arm64 suffix),
-// so it is accepted for every Linux architecture.
 func nativeArchOK(path, goarch string) bool {
 	p := strings.ToLower(path)
 	hasArm64 := strings.Contains(p, "-arm64")
 	if goarch == "arm64" {
 		return hasArm64 || strings.Contains(p, "-natives-linux")
 	}
-	// 32-bit and 64-bit x86 share the un-suffixed natives.
+
 	return !hasArm64
 }

@@ -96,6 +96,8 @@ minecx [options]
 |---|---|---|
 | `--mc <version>` | Minecraft version, e.g. `1.21.4` | `latest` |
 | `--user <name>` | Offline player name | your OS user name |
+| `--skin <path\|url>` | Skin PNG (local file or URL) | off |
+| `--config <file>` | Use a specific `config.txt` | auto-detect |
 | `--ram <gb>` | Max Java heap | auto (½ RAM, max 8G) |
 | `--dir <path>` | Install / game folder | `%APPDATA%\minecx` (Win), `~/.local/share/minecx` (Linux) |
 | `--jobs <n>` | Parallel downloads | auto (2× cores, max 24) |
@@ -126,6 +128,36 @@ Examples:
 # Jump everything to the newest version
 ./minecx-linux-amd64 --update
 ```
+
+---
+
+## `config.txt` (easiest way to set name + skin)
+
+Put a file called `config.txt` **next to the binary** (or in the install
+folder) and minecx reads it on every start:
+
+```ini
+name: Erik
+skin: C:\Users\Erik\Pictures\skin.png
+model: steve
+ram: 6
+mc: latest
+```
+
+| Key | Meaning |
+|---|---|
+| `name` | your player name |
+| `skin` | a `.png` file **or** an `https://...` URL |
+| `model` | `steve` (classic) or `alex` (slim) |
+| `ram` | max RAM in GB |
+| `mc` | Minecraft version |
+
+That's it. Any key is optional; command-line flags override the file.
+
+For skins, minecx automatically installs the **OfflineSkins** mod and drops
+your PNG in `config/offlineskins/<name>.png`, so your skin shows in
+single-player without any account. (In-game, `/offlineskins change <name>`
+switches skins.)
 
 ---
 

@@ -10,13 +10,11 @@ import (
 	"strings"
 )
 
-// modProject is one entry of the curated mod set.
 type modProject struct {
 	ID   string
 	Name string
 }
 
-// Default mods, using stable Modrinth project IDs (same set as launch.sh).
 var defaultMods = []modProject{
 	{"P7dR8mSH", "Fabric API"},
 	{"AANobbMI", "Sodium"},
@@ -36,7 +34,6 @@ var defaultMods = []modProject{
 
 var skinMod = modProject{"dUHrybXD", "OfflineSkins"}
 
-// modProjects is the curated set plus OfflineSkins when a skin is configured.
 func (a *App) modProjects() []modProject {
 	projects := append([]modProject{}, defaultMods...)
 	if strings.TrimSpace(a.Cfg.Skin) != "" {
@@ -68,7 +65,6 @@ type modSummary struct {
 	File    string
 }
 
-// latestModVersion returns the newest Fabric build of a project for a version.
 func (a *App) latestModVersion(ctx context.Context, projectID, mcVersion string) (*modrinthVersion, error) {
 	u := "https://api.modrinth.com/v2/project/" + url.PathEscape(projectID) + "/version" +
 		"?game_versions=" + url.QueryEscape(`["`+mcVersion+`"]`) +
@@ -97,7 +93,6 @@ func pickPrimary(v *modrinthVersion) (downloadURL, filename, sha1 string, size i
 	return f.URL, f.Filename, f.Hashes.SHA1, f.Size, true
 }
 
-// collectMods resolves the given projects plus their required dependencies.
 func (a *App) collectMods(ctx context.Context, mcVersion string, projects []modProject) (tasks []DownloadTask, summary []modSummary, managed []string, failures []string) {
 	seen := map[string]bool{}
 	queue := make([]string, 0, len(projects))
@@ -146,7 +141,6 @@ func (a *App) collectMods(ctx context.Context, mcVersion string, projects []modP
 	return tasks, summary, managed, failures
 }
 
-// installMods downloads mods and removes files this launcher managed before.
 func (a *App) installMods(ctx context.Context, mcVersion string) error {
 	a.Log.Printf("[7/8] Mods (Modrinth-API)")
 	tasks, summary, managed, resolveFail := a.collectMods(ctx, mcVersion, a.modProjects())
@@ -159,7 +153,6 @@ func (a *App) installMods(ctx context.Context, mcVersion string) error {
 		a.Log.Printf("    WARNUNG: %s", f)
 	}
 
-	// Remove mods we installed previously that are no longer wanted.
 	if old, err := readLines(a.Paths.ManagedModsFile); err == nil {
 		keep := map[string]bool{}
 		for _, m := range managed {

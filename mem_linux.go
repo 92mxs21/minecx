@@ -7,7 +7,6 @@ import (
 	"strings"
 )
 
-// totalRAMGB returns the machine's physical memory in gigabytes, or 0 if unknown.
 func totalRAMGB() int {
 	f, err := os.Open("/proc/meminfo")
 	if err != nil {

@@ -22,7 +22,6 @@ var (
 	procGlobalMemoryStatusEx = kernel32.NewProc("GlobalMemoryStatusEx")
 )
 
-// totalRAMGB returns the machine's physical memory in gigabytes, or 0 if unknown.
 func totalRAMGB() int {
 	var m memStatusEx
 	m.dwLength = uint32(unsafe.Sizeof(m))
