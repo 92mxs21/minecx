@@ -203,9 +203,10 @@ Override it with `--dir` or `MINECX_HOME` if you want it somewhere else.
   `<install>/logs/`. The launcher prints a warning if any required library
   failed to download; run it again to retry.
 - **Game crashes right after `Backend library: LWJGL` / `OpenGL Version`**
-  (seen on some AMD + SDL3 setups) → minecx now **auto-restarts the game** when
-  this happens, and it usually starts fine on the next try. You can also run
-  `minecx --reset-options`.
+  → this is a known Minecraft 26.3 bug: the new **Vulkan** renderer crashes on
+  many AMD setups. minecx automatically forces the OpenGL backend
+  (`preferredGraphicsBackend:"opengl"`) so it starts first try. You can also
+  run `minecx --reset-options`.
 - **SteamOS "Read-only file system"** → you are writing next to the binary in
   a system path. Use a folder in your home, e.g.
   `./minecx-linux-amd64 --dir ~/minecx`.

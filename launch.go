@@ -37,22 +37,29 @@ func (a *App) prepareOptions() {
 		return
 	}
 	lines := strings.Split(string(b), "\n")
-	found, changed := false, false
-	for i, ln := range lines {
-		if strings.HasPrefix(strings.TrimSpace(ln), "exclusiveFullscreen:") {
-			found = true
-			if strings.TrimSpace(ln) != "exclusiveFullscreen:false" {
-				lines[i] = "exclusiveFullscreen:false"
-				changed = true
+	changed := false
+	for _, kv := range [][2]string{
+		{"exclusiveFullscreen", "false"},
+		{"preferredGraphicsBackend", `"opengl"`},
+	} {
+		key, val := kv[0], kv[1]
+		found := false
+		for i, ln := range lines {
+			if strings.HasPrefix(strings.TrimSpace(ln), key+":") {
+				found = true
+				if strings.TrimSpace(ln) != key+":"+val {
+					lines[i] = key + ":" + val
+					changed = true
+				}
 			}
 		}
-	}
-	if !found {
-		lines = append(lines, "exclusiveFullscreen:false")
-		changed = true
+		if !found {
+			lines = append(lines, key+":"+val)
+			changed = true
+		}
 	}
 	if changed {
-		a.Log.Printf("    Hinweis: exclusiveFullscreen deaktiviert (verhindert AMD/SDL3-Absturz)")
+		a.Log.Printf("    Hinweis: OpenGL erzwungen (Minecraft 26.3 Vulkan-Absturz auf AMD umgangen)")
 		_ = os.WriteFile(path, []byte(strings.Join(lines, "\n")), 0o644)
 	}
 	a.patchSodiumOptions()
