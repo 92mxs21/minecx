@@ -9,7 +9,7 @@ import (
 
 const (
 	appName = "minecx"
-	version = "1.1.4"
+	version = "1.1.5"
 )
 
 type Config struct {

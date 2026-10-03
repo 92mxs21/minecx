@@ -1,5 +1,6 @@
-name: Erik
-skin: skin.png
+# minecx config - set your name, then start again
+name:
+# skin: C:\path\to\skin.png   (or https://...)
 model: steve
-ram: 6
+# ram: 6
 mc: latest

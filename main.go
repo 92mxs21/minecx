@@ -21,15 +21,6 @@ type App struct {
 	fabricLoader string
 }
 
-func defaultUser() string {
-	for _, env := range []string{"MINECRAFT_USER", "USER", "USERNAME", "LOGNAME"} {
-		if v := strings.TrimSpace(os.Getenv(env)); v != "" {
-			return v
-		}
-	}
-	return "Player"
-}
-
 func autoJobs() int {
 	n := runtime.NumCPU() * 2
 	if n > 24 {
@@ -64,7 +55,7 @@ func usage(fs *flag.FlagSet) {
 
   Optionen:
     --mc <version>     Minecraft-Version (Standard: latest, z.B. 1.21.4)
-    --user <name>      Offline-Spielername (Standard: %s)
+    --user <name>      Spielername (sonst aus config.txt)
     --skin <pfad|url>  Skin als PNG-Datei oder URL (OfflineSkins)
     --config <datei>   config.txt verwenden
     --ram <gb>         Maximaler Java-RAM (Standard: automatisch)
@@ -87,7 +78,7 @@ func usage(fs *flag.FlagSet) {
     Du musst Minecraft Java Edition besitzen. Offline-Modus ist nur fuer den
     persoenlichen Einzelspieler-Betrieb mit einer legalen Kopie gedacht.
     Details: NOTICE
-`, appName, version, appName, defaultUser(), defaultDataDir())
+`, appName, version, appName, defaultDataDir())
 }
 
 func parseFlags(args []string) (*Config, bool) {
@@ -101,7 +92,7 @@ func parseFlags(args []string) (*Config, bool) {
 		help    bool
 	)
 	fs.StringVar(&cfg.MCVersion, "mc", "latest", "Minecraft-Version")
-	fs.StringVar(&cfg.User, "user", defaultUser(), "Spielername")
+	fs.StringVar(&cfg.User, "user", "", "Spielername")
 	fs.StringVar(&cfg.Skin, "skin", "", "Skin (URL oder PNG-Datei)")
 	fs.StringVar(&cfg.ConfigFile, "config", "", "config.txt Pfad")
 	fs.IntVar(&cfg.RamGB, "ram", 0, "RAM in GB")
@@ -144,9 +135,15 @@ func parseFlags(args []string) (*Config, bool) {
 		cfg.Dir = defaultDataDir()
 	}
 
-	if path := findConfigFile(cfg.ConfigFile, cfg.Dir); path != "" {
-		if fc, err := parseConfigFile(path); err == nil {
-			cfg.ConfigFile = path
+	configPath := ""
+	if cfg.ConfigFile != "" && fileExists(cfg.ConfigFile) {
+		configPath = cfg.ConfigFile
+	} else if !cfg.Clean {
+		configPath = ensureConfigFile(cfg.Dir)
+	}
+	if configPath != "" {
+		cfg.ConfigFile = configPath
+		if fc, err := parseConfigFile(configPath); err == nil {
 			if fc.Name != "" && !set["user"] {
 				cfg.User = fc.Name
 			}
@@ -168,9 +165,6 @@ func parseFlags(args []string) (*Config, bool) {
 		}
 	}
 
-	if strings.TrimSpace(cfg.User) == "" {
-		cfg.User = defaultUser()
-	}
 	if cfg.Jobs <= 0 {
 		cfg.Jobs = autoJobs()
 	}
@@ -216,6 +210,16 @@ func main() {
 	defer stop()
 
 	printHeader(app)
+
+	if strings.TrimSpace(cfg.User) == "" {
+		cfgPath := cfg.ConfigFile
+		if cfgPath == "" {
+			cfgPath = filepath.Join(paths.Root, "config.txt")
+		}
+		log.Printf("FEHLER: kein Spielername gesetzt (config.txt: %s)", cfgPath)
+		showError(appName, "Bitte setze deinen Namen in dieser Datei:\n\n"+cfgPath+"\n\nname: DeinName\n\nDanach minecx erneut starten.")
+		return
+	}
 
 	if err := app.run(ctx); err != nil {
 		log.Printf("FEHLER: %v", err)

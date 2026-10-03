@@ -140,11 +140,12 @@ Examples:
 ## `config.txt` (easiest way to set name + skin)
 
 Put a file called `config.txt` **next to the binary** (or in the install
-folder) and minecx reads it on every start:
+folder) and minecx reads it on every start. If it doesn't exist, minecx creates
+it automatically with an **empty name** — you must set your name before playing:
 
 ```ini
-name: Erik
-skin: C:\Users\Erik\Pictures\skin.png
+name: YourName
+skin: C:\Users\you\Pictures\skin.png
 model: steve
 ram: 6
 mc: latest
@@ -152,7 +153,7 @@ mc: latest
 
 | Key | Meaning |
 |---|---|
-| `name` | your player name |
+| `name` | your player name (**required**, starts empty) |
 | `skin` | a `.png` file **or** an `https://...` URL |
 | `model` | `steve` (classic) or `alex` (slim) |
 | `ram` | max RAM in GB |
